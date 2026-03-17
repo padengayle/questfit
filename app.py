@@ -25,7 +25,7 @@ if st.button("Complete Quest"):
             try:
                 # 4. Hit your local FastAPI backend
                 response = requests.post(
-                    "https://questfit-backend.onrender.com/",
+                    "https://questfit-backend.onrender.com/process-workout",
                     data={"text_log": workout_input}
                 )
                 
