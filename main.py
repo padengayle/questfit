@@ -9,6 +9,11 @@ from schemas import WorkoutExtraction
 from ai_agents import extract_workout_with_gemini, generate_dungeon_master_narrative
 from game_engine import Player, calculate_xp
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from starlette.requests import Request
+
 # 1. Database Setup
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -48,6 +53,10 @@ app = FastAPI(
     description="An AI-powered backend that turns unstructured workouts into RPG stats.",
     lifespan=lifespan
 )
+# Initialize the rate limiter to track IP addresses
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # 4. Endpoints
 @app.get("/player-status")
@@ -61,6 +70,8 @@ def get_player_status(session: Session = Depends(get_session)):
         "total_xp": db_user.total_xp
     }
 
+@app.post("/process-workout", response_model=WorkoutExtraction)
+@limiter.limit("15/day")
 @app.post("/process-workout", response_model=WorkoutExtraction)
 async def process_workout(
     text_log: str = Form(None),
