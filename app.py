@@ -23,7 +23,7 @@ if st.button("Complete Quest"):
         # Show a loading spinner while the AI agents run
         with st.spinner("The Dungeon Master is reviewing your logs..."):
             try:
-                # 4. Hit your local FastAPI backend
+                # 4. Hit your live Render backend
                 response = requests.post(
                     "https://questfit-backend.onrender.com/process-workout",
                     data={"text_log": workout_input}
@@ -39,13 +39,40 @@ if st.button("Complete Quest"):
                         st.markdown("### 📜 The Dungeon Master Says:")
                         st.info(f"*{data.get('quest_narrative')}*")
                         
+                        st.divider()
+                        
+                        # THE UI FLEX: Build the Visual RPG Dashboard
+                        st.subheader("🛡️ Live Player Stats")
+                        
+                        current_level = data.get("current_level", 1)
+                        total_xp = data.get("total_xp", 0)
+                        
+                        # Calculate progress to the next level (500 XP per level)
+                        xp_into_current_level = total_xp % 500
+                        progress_percentage = xp_into_current_level / 500.0
+                        
+                        # Create three columns for a clean metric layout
+                        col1, col2, col3 = st.columns(3)
+                        
+                        with col1:
+                            st.metric(label="Current Level", value=current_level)
+                        with col2:
+                            st.metric(label="Total Lifetime XP", value=total_xp)
+                        with col3:
+                            st.metric(label="XP to Next Level", value=f"{xp_into_current_level} / 500")
+                            
+                        # Inject a visual progress bar
+                        st.progress(progress_percentage, text="Level Progress")
+
+                        st.divider()
+
                         # THE TECHNICAL FLEX: Show the clean JSON for engineers
                         with st.expander("🛠️ View the Structured AI Extraction (Under the Hood)"):
                             st.json(data.get("exercises"))
                     else:
                         st.error("The Vision Agent flagged this as junk data. Please enter a real workout.")
                 else:
-                    st.error(f"Backend Error: {response.status_code} - {response.text}")
+                    st.error(f"Backend Error: {response.status_code} {response.text}")
                     
             except requests.exceptions.ConnectionError:
-                st.error("🚨 Connection Error: Make sure your FastAPI server (main.py) is running in another terminal tab!")
+                st.error("🚨 Connection Error: The frontend cannot reach the backend. Check your Render dashboard to ensure the server is running!")
