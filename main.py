@@ -70,7 +70,6 @@ def get_player_status(session: Session = Depends(get_session)):
         "total_xp": db_user.total_xp
     }
 
-@app.post("/process-workout", response_model=WorkoutExtraction)
 @limiter.limit("15/day")
 @app.post("/process-workout", response_model=WorkoutExtraction)
 async def process_workout(
