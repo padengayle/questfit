@@ -70,8 +70,8 @@ def get_player_status(session: Session = Depends(get_session)):
         "total_xp": db_user.total_xp
     }
 
-@limiter.limit("15/day")
 @app.post("/process-workout", response_model=WorkoutExtraction)
+@limiter.limit("15/day")
 async def process_workout(
     text_log: str = Form(None),
     image: UploadFile = File(None),
